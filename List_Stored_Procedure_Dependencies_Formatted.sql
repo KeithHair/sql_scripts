@@ -1,6 +1,6 @@
 DECLARE @ProcName varchar(70) = 'YourProcName'
 DECLARE @SearchDatabase varchar(70) = 'YourDatabaseName'	-- Current database will be searched if not given.
-DECLARE @SearchSchema varchar(70) = 'dbo'	-- Default schema will be searched if not given.
+DECLARE @SearchSchema varchar(70) = 'dbo'			-- Default schema will be searched if not given.
 
 SET @SearchDatabase = IIF(LEN(@SearchDatabase) = 0, DB_NAME(),@SearchDatabase)
 SET @SearchSchema = IIF(LEN(@SearchSchema) = 0, SCHEMA_NAME(),@SearchSchema)
@@ -12,6 +12,9 @@ SET NOCOUNT ON
 
 DECLARE @str nvarchar(4000) = ''''
 DROP TABLE IF EXISTS #strTable
+IF OBJECT_ID(''tempdb.dbo.#strTable'',''U'') IS NOT NULL
+	DROP TABLE #strTable;
+
 CREATE TABLE #strTable(
 	[Result] [varchar](2000) NULL
 )
@@ -25,11 +28,11 @@ END
 DECLARE cursor1 CURSOR FOR	
 
 	SELECT
-	SCHEMA_NAME(o.SCHEMA_ID)								AS ''ProcSchemaName'',
-	o.name													AS ''AnalyzedProcName'',
+	SCHEMA_NAME(o.SCHEMA_ID)					AS ''ProcSchemaName'',
+	o.name								AS ''AnalyzedProcName'',
 	COALESCE(referenced_database_name,DB_NAME())			AS ''RefedDatabaseName'',
 	COALESCE(referenced_schema_name,SCHEMA_NAME())			AS ''RefedSchemaName'',
-	referenced_entity_name									AS ''RefedObjectName''
+	referenced_entity_name						AS ''RefedObjectName''
 	FROM
 	sys.sql_expression_dependencies sed
 	INNER JOIN
