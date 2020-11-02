@@ -1,5 +1,5 @@
 -- Each given variable will narrow the results.
-DECLARE @FindColumnNameLike varchar(70)='name'					
+DECLARE @FindColumnNameLike varchar(70)= ''				
 DECLARE @FindTableNameLike varchar(70)=''
 DECLARE @FindDataType varchar(70)=''
 DECLARE @FindSchemaName varchar(70)=''
@@ -7,8 +7,8 @@ DECLARE @MinCharLen int=0
 DECLARE @MaxCharLen int=0
 DECLARE @IsNullable varchar(3)=''					-- yes or no
 DECLARE @ShowConstraints varchar(3)='yes'			-- yes or no
-DECLARE @FindConstraintLike varchar(70)=''			-- @ShowContraint must be 'yes'
-DECLARE @FindColumnValue sysname = 'summer'		--If blank ColumnValue column is exclude in results.
+DECLARE @FindConstraintLike varchar(70)='order'			-- @ShowContraint must be 'yes'
+DECLARE @FindColumnValue sysname = ''--'summer'		--If blank ColumnValue column is exclude in results.
 
 
 
@@ -25,7 +25,7 @@ SELECT
 	c.IS_NULLABLE												AS 'IsNullable',
 	CASE WHEN @ShowConstraints = 'yes' THEN
 		(select top 1 u.CONSTRAINT_NAME from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE u
-		where ('['+u.TABLE_CATALOG+'].['+u.TABLE_SCHEMA+'].['+u.TABLE_NAME+'].['+c.COLUMN_NAME+']') = ('['+c.TABLE_CATALOG+'].['+c.TABLE_SCHEMA+'].['+c.TABLE_NAME+'].['+u.COLUMN_NAME+']')
+		where ('['+u.TABLE_CATALOG+'].['+u.TABLE_SCHEMA+'].['+u.TABLE_NAME+'].['+u.COLUMN_NAME+']') = ('['+c.TABLE_CATALOG+'].['+c.TABLE_SCHEMA+'].['+c.TABLE_NAME+'].['+c.COLUMN_NAME+']')
 		and	(u.CONSTRAINT_NAME LIKE '%'+@FindConstraintLike+'%'))
 	ELSE '----'
 	END															AS 'ConstraintName'
@@ -45,7 +45,8 @@ WHERE
 	((c.CHARACTER_MAXIMUM_LENGTH BETWEEN @MinCharLen AND @MaxCharLen)
 	  OR (@MinCharLen=0 AND @MaxCharLen=0))
 	AND
-	(c.IS_NULLABLE = @IsNullable OR @IsNullable='')
+	  (c.IS_NULLABLE = @IsNullable OR @IsNullable='')
+
 
 --SELECT * FROM #tmp1
 --===================================
@@ -82,6 +83,13 @@ FETCH NEXT FROM cursor1 INTO @TableName, @ColumnName, @DataType, @MaxCharLength,
 WHILE (@@FETCH_STATUS = 0)
 BEGIN
 	SET @ColumnValue = NULL
+	
+	IF @FindConstraintLike <> '' AND @ConstraintName IS NULL
+	BEGIN
+		FETCH NEXT FROM cursor1 INTO @TableName, @ColumnName, @DataType, @MaxCharLength, @Nullable, @ConstraintName
+		CONTINUE
+	END
+
 	IF @FindColumnValue <> ''
 	BEGIN
 		IF @DataType IN ('varchar', 'char', 'text','nvarchar', 'nchar', 'ntext')
