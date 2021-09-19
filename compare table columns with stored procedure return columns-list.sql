@@ -118,7 +118,7 @@ select
 	sc.stored_procedure_name as 'Stored Procedure',
 	sc.name_and_type as 'SP Column and Type',
 
-	tc.table_name as 'Table',
+	tc.table_name as 'Table Column',
 	tc.name_and_type as 'Table Column and Type',
 
 	case
